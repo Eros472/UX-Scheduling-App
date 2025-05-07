@@ -12,6 +12,15 @@
     <TextField fx:id="descriptionField" promptText="Description" />
     <DatePicker fx:id="dueDatePicker" promptText="Select Due Date" />
 
+    <!-- Time Picker -->
+    <Label text="Time:" />
+    <HBox spacing="10" alignment="CENTER">
+        <Spinner fx:id="hourSpinner" prefWidth="80" />
+        <Label text=":"/>
+        <Spinner fx:id="minuteSpinner" prefWidth="80" />
+        <ComboBox fx:id="amPmComboBox" prefWidth="80" />
+    </HBox>
+
     <Label text="Priority:" />
     <HBox spacing="10" alignment="CENTER">
         <RadioButton fx:id="highPriority" text="High" />

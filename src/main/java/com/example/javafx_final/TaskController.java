@@ -10,6 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
@@ -50,9 +51,13 @@ public class TaskController {
                     protected void updateItem(Task task, boolean empty) {
                         super.updateItem(task, empty);
                         if (task == null || empty) {
+                            setText(null);
                             setGraphic(null);
                         } else {
                             HBox hbox = new HBox(10);
+                            hbox.setStyle("-fx-padding: 6;");
+
+                            // Colored priority dot
                             Circle colorDot = new Circle(6);
                             switch (task.getPriority()) {
                                 case "High": colorDot.setFill(Color.RED); break;
@@ -60,14 +65,26 @@ public class TaskController {
                                 case "Low": colorDot.setFill(Color.GREEN); break;
                                 default: colorDot.setFill(Color.GRAY); break;
                             }
-                            Label label = new Label(task.getTitle());
-                            hbox.getChildren().addAll(colorDot, label);
+
+                            // Title label (bold)
+                            Label titleLabel = new Label(task.getTitle());
+                            titleLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
+
+                            // Detail label (due date + priority)
+                            Label detailLabel = new Label("Due: " + task.getDueDate() + " | Priority: " + task.getPriority());
+                            detailLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #555;");
+
+                            VBox textBox = new VBox(titleLabel, detailLabel);
+                            textBox.setSpacing(2);
+
+                            hbox.getChildren().addAll(colorDot, textBox);
                             setGraphic(hbox);
                         }
                     }
                 };
             }
         });
+
 
         // Allow double-click to edit
         taskListView.setOnMouseClicked((MouseEvent event) -> {
