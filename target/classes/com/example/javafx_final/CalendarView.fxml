@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.javafx_final.CalendarController">
+
+    <top>
+        <BorderPane style="-fx-padding: 10;">
+            <left>
+                <HBox alignment="CENTER" spacing="10">
+                    <Button text="◀" onAction="#handlePrevMonth" />
+                    <Label fx:id="monthLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                    <Button text="▶" onAction="#handleNextMonth" />
+                </HBox>
+            </left>
+            <right>
+                <Button text="⚙" onAction="#handleOpenSettings" style="-fx-font-size: 16px;" />
+            </right>
+        </BorderPane>
+    </top>
+
+    <center>
+        <GridPane fx:id="calendarGrid" hgap="5" vgap="5" style="-fx-padding: 10;">
+        </GridPane>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER" spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10" />
+            </padding>
+            <Button text="Back to Planner" onAction="#handleBackToPlanner" />
+        </HBox>
+    </bottom>
+
+</BorderPane>
