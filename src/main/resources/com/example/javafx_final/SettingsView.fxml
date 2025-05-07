@@ -1,17 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox spacing="15" alignment="CENTER" xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.example.javafx_final.SettingsController">
-    <Label text="Settings" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
-    <CheckBox text="Voice Assist" />
-    <Button text="Language/Region >" />
-    <Button text="Time Zone >" />
-    <CheckBox text="Notifications" />
-    <CheckBox text="Color Blind Mode" />
-    <HBox spacing="10">
-        <Button text="Cancel" onAction="#handleCancel"/>
-        <Button text="Save" onAction="#handleSave"/>
-    </HBox>
-</VBox>
+
+<!--
+Name: Erick Hambardzumyan
+Class: CS 2450
+Assignment: UX Project: Daily Planner
+Date: 05/07/2025
+-->
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.javafx_final.SettingsController">
+    <center>
+        <VBox spacing="20" alignment="CENTER" style="-fx-padding: 40;">
+            <Label text="Settings" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+
+            <CheckBox text="Voice Assist" />
+            <Button text="Language/Region >" />
+            <Button text="Time Zone >" />
+            <CheckBox text="Notifications" />
+            <CheckBox text="Color Blind Mode" />
+
+            <HBox spacing="15" alignment="CENTER">
+                <Button text="Cancel" onAction="#handleCancel" />
+                <Button text="Save" onAction="#handleSave" />
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

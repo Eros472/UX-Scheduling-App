@@ -1,6 +1,13 @@
+/*
+Name: Erick Hambardzumyan
+Class: CS 2450
+Assignment: UX Project: Daily Planner
+Date: 05/07/2025
+ */
+
 package com.example.javafx_final;
 
-// File: Task.java
+//Task.java
 public class Task {
     private String title;
     private String description;

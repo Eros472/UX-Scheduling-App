@@ -1,5 +1,12 @@
-// File: SettingsController.java
+/*
+Name: Erick Hambardzumyan
+Class: CS 2450
+Assignment: UX Project: Daily Planner
+Date: 05/07/2025
+ */
 package com.example.javafx_final;
+
+// SettingsController.java
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

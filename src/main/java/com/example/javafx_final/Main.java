@@ -1,4 +1,14 @@
-package com.example.javafx_final;// File: Main.java
+/*
+Name: Erick Hambardzumyan
+Class: CS 2450
+Assignment: UX Project: Daily Planner
+Date: 05/07/2025
+ */
+
+package com.example.javafx_final;
+
+// Main.java
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;

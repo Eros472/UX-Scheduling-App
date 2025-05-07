@@ -1,4 +1,13 @@
+/*
+Name: Erick Hambardzumyan
+Class: CS 2450
+Assignment: UX Project: Daily Planner
+Date: 05/07/2025
+ */
+
 package com.example.javafx_final;
+
+// EditTaskController.java
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -27,32 +36,58 @@ public class EditTaskController {
 
     @FXML
     public void initialize() {
-        // Priority radio setup
+        // Setup toggle group for priority radio buttons
         priorityGroup = new ToggleGroup();
         highPriority.setToggleGroup(priorityGroup);
         mediumPriority.setToggleGroup(priorityGroup);
         lowPriority.setToggleGroup(priorityGroup);
 
-        // Time Picker setup
-        SpinnerValueFactory<Integer> hourFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 12, 12);
-        SpinnerValueFactory<Integer> minuteFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0);
+        // Create custom hour spinner with wraparound support (1-12 AM/PM)
+        SpinnerValueFactory<Integer> hourFactory = new SpinnerValueFactory<Integer>() {
+            {
+                setValue(12); // Default to 12
+            }
 
+            @Override
+            public void decrement(int steps) {
+                int current = getValue();
+                int newVal = current - steps;
+                if (newVal < 1) newVal = 12 - ((1 - newVal) % 12);
+                setValue(newVal);
+            }
+
+            @Override
+            public void increment(int steps) {
+                int current = getValue();
+                int newVal = current + steps;
+                if (newVal > 12) newVal = ((newVal - 1) % 12) + 1;
+                setValue(newVal);
+            }
+        };
         hourSpinner.setValueFactory(hourFactory);
+        hourFactory.setWrapAround(true);
+
+        // Minute spinner 0–59
+        SpinnerValueFactory<Integer> minuteFactory = new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0);
         minuteSpinner.setValueFactory(minuteFactory);
+
+        // AM/PM dropdown
         amPmComboBox.getItems().addAll("AM", "PM");
         amPmComboBox.setValue("AM");
 
+        // Format both spinners visually and input-wise
         formatSpinner(hourSpinner, 2);
         formatSpinner(minuteSpinner, 2);
     }
 
+    // Load task data into form for editing
     public void setTask(Task task) {
         this.currentTask = task;
 
         titleField.setText(task.getTitle());
         descriptionField.setText(task.getDescription());
 
-        // Parse date and time from combined string
+        // Extract and parse the due date and time
         if (task.getDueDate() != null && !task.getDueDate().isEmpty()) {
             String[] parts = task.getDueDate().split(" ");
             dueDatePicker.setValue(LocalDate.parse(parts[0]));
@@ -69,6 +104,7 @@ public class EditTaskController {
             }
         }
 
+        // Set correct priority radio
         switch (task.getPriority()) {
             case "High": highPriority.setSelected(true); break;
             case "Medium": mediumPriority.setSelected(true); break;
@@ -78,11 +114,12 @@ public class EditTaskController {
 
     @FXML
     public void handleSave(ActionEvent event) {
+        // Apply user input to current task
         currentTask.setTitle(titleField.getText());
         currentTask.setDescription(descriptionField.getText());
         currentTask.setPriority(((RadioButton) priorityGroup.getSelectedToggle()).getText());
 
-        // Format time from pickers
+        // Build and format 24-hour time
         int hour = hourSpinner.getValue();
         int minute = minuteSpinner.getValue();
         String amPm = amPmComboBox.getValue();
@@ -93,6 +130,7 @@ public class EditTaskController {
         LocalTime time = LocalTime.of(hour, minute);
         String formattedTime = time.format(DateTimeFormatter.ofPattern("hh:mm a"));
 
+        // Combine date and time
         String date = dueDatePicker.getValue() != null ? dueDatePicker.getValue().toString() : "";
         currentTask.setDueDate(date + " " + formattedTime);
 
@@ -105,6 +143,7 @@ public class EditTaskController {
         ((Stage) titleField.getScene().getWindow()).close();
     }
 
+    // Format spinner input (pad numbers, restrict input to digits)
     private void formatSpinner(Spinner<Integer> spinner, int minDigits) {
         spinner.setEditable(true);
         String format = "%0" + minDigits + "d";

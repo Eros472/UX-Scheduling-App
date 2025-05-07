@@ -1,5 +1,13 @@
-// CalendarController.java (FINAL - With Add Task Prefill + Centered Header)
+/*
+Name: Erick Hambardzumyan
+Class: CS 2450
+Assignment: UX Project: Daily Planner
+Date: 05/07/2025
+ */
+
 package com.example.javafx_final;
+
+// CalendarController.java
 
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
@@ -11,6 +19,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -27,12 +36,14 @@ public class CalendarController {
 
     @FXML
     public void initialize() {
+        // Setup layout and listeners when calendar screen loads
         setupResponsiveGrid();
         setupTaskSyncListener();
         updateCalendar();
     }
 
     private void setupResponsiveGrid() {
+        // Set 7 equal-width columns
         calendarGrid.getColumnConstraints().clear();
         for (int i = 0; i < 7; i++) {
             ColumnConstraints col = new ColumnConstraints();
@@ -41,6 +52,7 @@ public class CalendarController {
             calendarGrid.getColumnConstraints().add(col);
         }
 
+        // Set 7 equal-height rows
         calendarGrid.getRowConstraints().clear();
         for (int i = 0; i < 7; i++) {
             RowConstraints row = new RowConstraints();
@@ -51,10 +63,12 @@ public class CalendarController {
     }
 
     private void setupTaskSyncListener() {
+        // Redraw calendar whenever task list changes
         TaskController.tasks.addListener((ListChangeListener<Task>) change -> updateCalendar());
     }
 
     private void updateCalendar() {
+        // Update the month label and regenerate the calendar grid
         monthLabel.setText(currentMonth.getMonth() + " " + currentMonth.getYear());
         populateCalendar(currentMonth);
     }
@@ -62,6 +76,7 @@ public class CalendarController {
     private void populateCalendar(LocalDate monthStart) {
         calendarGrid.getChildren().clear();
 
+        // Add weekday headers (Sun-Sat)
         String[] weekdays = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
         for (int i = 0; i < 7; i++) {
             Label dayHeader = new Label(weekdays[i]);
@@ -75,12 +90,6 @@ public class CalendarController {
         int startDayOfWeek = date.getDayOfWeek().getValue() % 7;
         int daysInMonth = date.lengthOfMonth();
 
-        Map<String, List<Task>> tasksByDate = TaskController.tasks.stream()
-                .collect(Collectors.groupingBy(task -> {
-                    String fullDate = task.getDueDate();
-                    return fullDate != null && fullDate.length() >= 10 ? fullDate.substring(0, 10) : "UNKNOWN";
-                }));
-
         int row = 1;
         int col = startDayOfWeek;
 
@@ -89,29 +98,56 @@ public class CalendarController {
             dayBox.setPadding(new Insets(5));
             dayBox.setPrefSize(110, 90);
             dayBox.setAlignment(Pos.TOP_CENTER);
-            dayBox.setStyle("-fx-border-color: #DDD; -fx-border-width: 1;");
+            dayBox.setStyle("-fx-border-color: #e0e0cc; -fx-border-width: 1;");
 
+            // Add numeric day label
             Label dayLabel = new Label(String.valueOf(day));
             dayLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
             dayBox.getChildren().add(dayLabel);
 
+            // Highlight current day
             LocalDate thisDay = date.withDayOfMonth(day);
             if (thisDay.equals(LocalDate.now())) {
-                dayBox.setStyle("-fx-background-color: #e0f7fa; -fx-border-color: #2196f3; -fx-border-width: 2;");
+                dayBox.setStyle("-fx-background-color: #fffbe6; -fx-border-color: #bfa100; -fx-border-width: 2;");
             }
 
-            String dateKey = thisDay.toString();
-            List<Task> dayTasks = tasksByDate.getOrDefault(dateKey, new ArrayList<>());
+            // Add priority dots for tasks on that day
+            Map<String, Long> priorityCounts = TaskController.tasks.stream()
+                    .filter(task -> {
+                        try {
+                            LocalDate due = LocalDate.parse(task.getDueDate().substring(0, 10));
+                            return due.equals(thisDay);
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    })
+                    .collect(Collectors.groupingBy(Task::getPriority, Collectors.counting()));
 
-            if (!dayTasks.isEmpty()) {
-                Label taskCount = new Label("+" + dayTasks.size() + " task" + (dayTasks.size() > 1 ? "s" : ""));
-                taskCount.setStyle("-fx-font-size: 11px; -fx-text-fill: gray;");
-                dayBox.getChildren().add(taskCount);
+            if (!priorityCounts.isEmpty()) {
+                VBox dotsBox = new VBox(3);
+                dotsBox.setAlignment(Pos.CENTER);
+
+                priorityCounts.forEach((priority, count) -> {
+                    HBox dotRow = new HBox(4);
+                    dotRow.setAlignment(Pos.CENTER);
+                    Circle dot = new Circle(4);
+                    switch (priority) {
+                        case "High": dot.setFill(Color.RED); break;
+                        case "Medium": dot.setFill(Color.GOLD); break;
+                        case "Low": dot.setFill(Color.GREEN); break;
+                        default: dot.setFill(Color.GRAY);
+                    }
+                    Label countLabel = new Label("+" + count);
+                    dotRow.getChildren().addAll(dot, countLabel);
+                    dotsBox.getChildren().add(dotRow);
+                });
+
+                dayBox.getChildren().add(dotsBox);
             }
 
+            // Show expanded weekly view when clicking a day
             calendarGrid.add(dayBox, col, row);
-
-            dayBox.setOnMouseClicked(event -> showTasksForDate(thisDay));
+            dayBox.setOnMouseClicked(event -> showWeeklyExpandedView(thisDay));
 
             col++;
             if (col > 6) {
@@ -121,104 +157,136 @@ public class CalendarController {
         }
     }
 
-    private void showTasksForDate(LocalDate date) {
-        List<Task> tasks = TaskController.tasks.stream()
-                .filter(task -> task.getDueDate() != null && task.getDueDate().startsWith(date.toString()))
-                .collect(Collectors.toList());
+    private void showWeeklyExpandedView(LocalDate selectedDate) {
+        // Open popup window to show 7-day task details
+        Stage dialogStage = new Stage();
+        dialogStage.setTitle("Weekly View");
+        dialogStage.setWidth(1000);
+        dialogStage.setHeight(600);
 
-        Dialog<Task> dialog = new Dialog<>();
-        dialog.setTitle("Tasks for " + date);
-        dialog.setHeaderText("Click a task to edit it or add a new task");
+        VBox wrapper = new VBox(15);
+        wrapper.setPadding(new Insets(20));
+        wrapper.setStyle("-fx-background-color: #f9f9f9;");
 
-        VBox taskList = new VBox(10);
-        taskList.setPadding(new Insets(10));
+        // Determine Sunday start of selected week
+        LocalDate weekStart = selectedDate.minusDays(selectedDate.getDayOfWeek().getValue() % 7);
 
-        for (Task task : tasks) {
-            HBox row = new HBox(10);
-            row.setAlignment(Pos.CENTER_LEFT);
+        // Top header with navigation
+        Button prevWeek = new Button("←");
+        Button nextWeek = new Button("→");
+        Label header = new Label("Tasks for the week of " + weekStart);
+        header.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
-            Button taskButton = new Button(task.getTitle());
-            taskButton.setMaxWidth(Double.MAX_VALUE);
-            taskButton.setOnAction(e -> {
-                dialog.setResult(task);
-                dialog.close();
-            });
-            HBox.setHgrow(taskButton, Priority.ALWAYS);
+        HBox nav = new HBox(15, prevWeek, header, nextWeek);
+        nav.setAlignment(Pos.CENTER);
+        wrapper.getChildren().add(nav);
 
-            Button deleteButton = new Button("🗑");
-            deleteButton.setStyle("-fx-background-color: transparent; -fx-text-fill: red;");
-            deleteButton.setOnAction(e -> {
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirm Deletion");
-                alert.setHeaderText("Delete Task");
-                alert.setContentText("Are you sure you want to delete this task?");
+        // Allow navigating to previous or next week
+        prevWeek.setOnAction(e -> {
+            dialogStage.close();
+            showWeeklyExpandedView(weekStart.minusWeeks(1));
+        });
+        nextWeek.setOnAction(e -> {
+            dialogStage.close();
+            showWeeklyExpandedView(weekStart.plusWeeks(1));
+        });
 
-                Optional<ButtonType> result = alert.showAndWait();
-                if (result.isPresent() && result.get() == ButtonType.OK) {
-                    TaskController.tasks.remove(task);
+        HBox weekRow = new HBox(15);
+        weekRow.setAlignment(Pos.TOP_CENTER);
+
+        // Populate each day of the week with task cards
+        for (int i = 0; i < 7; i++) {
+            LocalDate day = weekStart.plusDays(i);
+            VBox dayColumn = new VBox(8);
+            dayColumn.setPadding(new Insets(10));
+            dayColumn.setStyle("-fx-border-color: #ccc; -fx-background-color: #ffffff; -fx-border-radius: 5px;");
+            dayColumn.setPrefWidth(120);
+
+            // Display day name and number
+            Label dateLabel = new Label(day.getDayOfWeek().toString().substring(0, 3) + "\n" + day.getDayOfMonth());
+            dateLabel.setStyle("-fx-font-weight: bold; -fx-text-alignment: center;");
+            dayColumn.getChildren().add(dateLabel);
+
+            // Show each task for the current day
+            List<Task> dayTasks = TaskController.tasks.stream()
+                    .filter(task -> {
+                        try {
+                            LocalDate due = LocalDate.parse(task.getDueDate().substring(0, 10));
+                            return due.equals(day);
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            for (Task task : dayTasks) {
+                VBox card = new VBox(4);
+                card.setPadding(new Insets(6));
+                card.setSpacing(2);
+                card.setStyle("-fx-background-radius: 8; -fx-border-radius: 8; -fx-text-fill: white;");
+
+                // Choose background color based on task priority
+                String color = switch (task.getPriority()) {
+                    case "High" -> "#d32f2f";
+                    case "Medium" -> "#fbc02d";
+                    case "Low" -> "#388e3c";
+                    default -> "gray";
+                };
+                card.setStyle(card.getStyle() + " -fx-background-color: " + color + ";");
+
+                Label title = new Label(task.getTitle());
+                title.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
+
+                Label desc = new Label(task.getDescription());
+                desc.setWrapText(true);
+                desc.setStyle("-fx-font-size: 11; -fx-text-fill: white;");
+
+                String timePart = task.getDueDate().length() > 10 ? task.getDueDate().substring(11) : "";
+                Label time = new Label(timePart);
+                time.setStyle("-fx-font-size: 10; -fx-font-style: italic; -fx-text-fill: white;");
+
+                // Indicate overdue tasks visually
+                if (LocalDate.parse(task.getDueDate().substring(0, 10)).isBefore(LocalDate.now())) {
+                    Label pastDue = new Label("PAST DUE!");
+                    pastDue.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-background-color: #b71c1c; -fx-padding: 2 4 2 4; -fx-background-radius: 4;");
+                    card.getChildren().add(pastDue);
+                }
+
+                card.getChildren().addAll(title, desc, time);
+                dayColumn.getChildren().add(card);
+            }
+
+            // Add task button for this day
+            Button addButton = new Button("+ Add");
+            addButton.setOnAction(e -> {
+                try {
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/javafx_final/NewTaskView.fxml"));
+                    Parent root = loader.load();
+                    NewTaskController controller = loader.getController();
+                    controller.prefillDate(day);
+                    Stage stage = new Stage();
+                    stage.setScene(new Scene(root));
+                    stage.setTitle("Add Task on " + day);
+                    stage.showAndWait();
                     updateCalendar();
-                    taskList.getChildren().remove(row);
+                    dialogStage.close();
+                    showWeeklyExpandedView(selectedDate);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
             });
-
-            row.getChildren().addAll(taskButton, deleteButton);
-            taskList.getChildren().add(row);
+            dayColumn.getChildren().add(addButton);
+            weekRow.getChildren().add(dayColumn);
         }
 
-        Button addButton = new Button("+ Add New Task");
-        addButton.setMaxWidth(Double.MAX_VALUE);
-        addButton.setStyle("-fx-background-color: #dddddd; -fx-font-weight: bold;");
-        addButton.setOnAction(e -> {
-            dialog.setResult(null);
-            dialog.close();
-            try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/javafx_final/NewTaskView.fxml"));
-                Parent root = loader.load();
-                NewTaskController controller = loader.getController();
-                controller.prefillDate(date);
-                Stage stage = new Stage();
-                stage.setScene(new Scene(root));
-                stage.setTitle("Add Task on " + date);
-                stage.show();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        });
+        ScrollPane scroll = new ScrollPane(weekRow);
+        scroll.setFitToHeight(true);
+        scroll.setFitToWidth(true);
+        wrapper.getChildren().add(scroll);
 
-        taskList.getChildren().add(new Separator());
-        taskList.getChildren().add(addButton);
-
-        dialog.getDialogPane().setContent(taskList);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
-
-        dialog.showAndWait().ifPresent(selectedTask -> {
-            if (selectedTask != null && !TaskController.tasks.contains(selectedTask)) {
-                TaskController.tasks.removeIf(t -> t.getTitle().equals(selectedTask.getTitle()) && t.getDueDate().equals(selectedTask.getDueDate()));
-            }
-            updateCalendar();
-            try {
-                FXMLLoader loader;
-                Parent root;
-                Stage stage = new Stage();
-                if (selectedTask == null) {
-                    loader = new FXMLLoader(getClass().getResource("/com/example/javafx_final/NewTaskView.fxml"));
-                    root = loader.load();
-                    NewTaskController controller = loader.getController();
-                    controller.prefillDate(date);
-                    stage.setTitle("Add Task on " + date);
-                } else {
-                    loader = new FXMLLoader(getClass().getResource("/com/example/javafx_final/EditTaskView.fxml"));
-                    root = loader.load();
-                    EditTaskController controller = loader.getController();
-                    controller.setTask(selectedTask);
-                    stage.setTitle("Edit Task");
-                }
-                stage.setScene(new Scene(root));
-                stage.show();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+        Scene scene = new Scene(wrapper);
+        dialogStage.setScene(scene);
+        dialogStage.show();
     }
 
     @FXML

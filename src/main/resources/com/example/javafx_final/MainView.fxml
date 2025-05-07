@@ -3,6 +3,13 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.shape.*?>
 
+<!--
+Name: Erick Hambardzumyan
+Class: CS 2450
+Assignment: UX Project: Daily Planner
+Date: 05/07/2025
+-->
+
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.javafx_final.TaskController">
     <top>
         <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 10;">

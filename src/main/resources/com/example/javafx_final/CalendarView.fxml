@@ -3,6 +3,13 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.*?>
 
+<!--
+Name: Erick Hambardzumyan
+Class: CS 2450
+Assignment: UX Project: Daily Planner
+Date: 05/07/2025
+-->
+
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.example.javafx_final.CalendarController">
 
